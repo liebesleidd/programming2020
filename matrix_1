@@ -1,0 +1,154 @@
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+
+class Matrix {
+private:
+	int dim;
+	int* arr;
+
+	friend istream& operator >> (istream& in, const Matrix& matrix);
+	friend ostream& operator << (ostream& out, const Matrix& matrix);
+
+
+public:
+
+	Matrix() : dim(0), arr(nullptr) {}
+
+	Matrix(int _dim) : dim(_dim) {
+		arr = new int[dim * dim];
+		for (int i = 0; i < dim * dim; i++)
+		{
+			arr[i] = 0;
+		}
+		for (int i = 0; i < dim; i++) {
+			arr[i * dim + i] = 1;
+		}
+	}
+	Matrix(int _dim, int* _arr) : dim(_dim) {
+		arr = new int[dim * dim];
+		int j = 0;
+		for (int i = 0; i < dim * dim; i++)
+		{
+			arr[i] = 0;
+		}
+		for (int i = 0; i < dim; i++) {
+			arr[i * dim + i] = _arr[j++];;
+		}
+	}
+	Matrix(const Matrix& other): dim(other.dim) {
+		arr = new int[dim * dim];
+		for (int i = 0; i < dim * dim; i++) {
+			arr[i] = other.arr[i];
+		}
+	}
+	Matrix operator*(const Matrix& other) const{
+		Matrix new_matrix(dim);
+		for (int i = 0; i < dim * dim; i++) 
+		{
+			int row = i / dim;
+			int column = i % dim;
+			int sum = 0;
+			for (int j = 0; j < dim; j++) {
+				sum += arr[row * dim + j] * other.arr[j*dim + column];
+			}
+			new_matrix.arr[i] = sum;
+		}
+		return new_matrix;
+	}
+	Matrix operator+(const Matrix& other) const {
+		if (dim != other.dim) {
+			throw ("Different dim");
+		}
+		Matrix new_matrix(dim);
+		for (int i = 0; i < dim*dim; i++) {
+			new_matrix.arr[i] = arr[i] + other.arr[i];
+		}
+		return new_matrix;
+	}
+
+	Matrix operator-(const Matrix& other) const {
+		Matrix matrix_minus(dim);
+		for (int i = 0; i < dim * dim; i++) {
+			matrix_minus.arr[i] = arr[i] * (-1);
+		}
+		return *this + matrix_minus;
+	}
+	Matrix& operator=(const Matrix& other) {
+		if (*this != other) {
+			delete[] arr;
+			dim = other.dim;
+			arr = new int[dim * dim];
+
+			for (int i = 0; i < dim * dim; i++)
+				arr[i] = other.arr[i];
+		}
+		return *this;
+	}
+	bool operator==(const Matrix& other) const {
+		return !(*this != other);
+	}
+	bool operator!=(const Matrix& other) const {
+		for (int i = 0; i < dim * dim; i++) {
+			if (arr[i] != other.arr[i]) return true;
+		}
+		return false;
+	}
+	Matrix operator!() {
+		Matrix new_matrix(dim);
+		for (int i = 0; i < dim * dim; i++) 
+		{
+			int row = i / dim;
+			int column = i % dim;
+			new_matrix.arr[i] = arr[column * dim + row];
+		}
+		return new_matrix;
+	}
+	Matrix operator()(int row, int column) {
+		Matrix new_matrix(dim-1);
+		int j = 0;
+		for (int i = 0; i < dim * dim; i++) 
+		{
+			if ((i % dim != column - 1) && (i / dim != row - 1))
+				new_matrix.arr[j++] = arr[i];
+		}
+		return new_matrix;
+	}
+	~Matrix() {
+		delete[] arr;
+	}
+};
+
+istream& operator >> (istream& in, const Matrix& matrix) {
+	for (int i = 0; i < matrix.dim * matrix.dim; i++)
+			in >> matrix.arr[i];
+	return in;
+}
+
+ostream& operator << (ostream& out, const Matrix& matrix) {
+	for (int i = 0; i < matrix.dim; i++) {
+		for (int j = 0; j < matrix.dim; j++)
+			out << matrix.arr[i * matrix.dim + j] << ' ';
+		out << endl;
+	}
+	return out;
+}
+
+
+int main() {
+	int dim, k;
+	cin >> dim >> k;
+	int *arr = new int[dim];
+	for (int i = 0; i < dim; i++)
+	{
+		arr[i] = k;
+	}
+	Matrix A(dim), B(dim), C(dim), D(dim), K(dim, arr);
+	cin >> A >> B >> C >> D;
+	cout << (A + (B * !C) + K) * (!D);
+	delete arr;
+	return 0;
+}
